@@ -52,6 +52,7 @@ wxDEFINE_EVENT(wxEVT_COMMAND_THUMBNAIL_VIEW_RIGHT_CLICK, wxThumbnailEvent);
 wxDEFINE_EVENT(wxEVT_COMMAND_THUMBNAIL_LEFT_DCLICK, wxThumbnailEvent);
 wxDEFINE_EVENT(wxEVT_COMMAND_THUMBNAIL_RETURN, wxThumbnailEvent);
 wxDEFINE_EVENT(wxEVT_COMMAND_THUMBNAIL_DRAG_START, wxThumbnailEvent);
+wxDEFINE_EVENT(wxEVT_COMMAND_THUMBNAIL_SORTED, wxThumbnailEvent);
 
 IMPLEMENT_CLASS(wxThumbnailCtrl, wxScrolledWindow)
 IMPLEMENT_CLASS(wxThumbnailItem, wxObject)
@@ -268,6 +269,12 @@ void wxThumbnailCtrl::Sort()
 
     sm_currentThumbnailCtrl = NULL;
 
+    wxThumbnailEvent cmdEvent(
+        wxEVT_COMMAND_THUMBNAIL_SORTED,
+        GetId());
+    cmdEvent.SetEventObject(this);
+    GetEventHandler()->ProcessEvent(cmdEvent);
+
     Freeze();
 
     for (i = 0; i < len; i++)
@@ -396,7 +403,7 @@ bool wxThumbnailCtrl::GetItemRectImage(int n, wxRect& rect, bool transform)
 void wxThumbnailCtrl::SetThumbnailImageSize(const wxSize& sz)
 {
     m_thumbnailImageSize = sz;
-    // CalculateOverallThumbnailSize();
+    CalculateOverallThumbnailSize();
 
     if (GetCount() > 0 && m_freezeCount == 0)
     {
@@ -747,7 +754,7 @@ void wxThumbnailCtrl::OnMouse(wxMouseEvent& event)
     {
         OnRightClickUp(event);
     }
-    else if (event.Dragging() && event.LeftIsDown())
+    else if (event.Dragging() && event.LeftIsDown() && GetSelections().Count())
     {
         wxThumbnailEvent cmdEvent(
             wxEVT_COMMAND_THUMBNAIL_DRAG_START,
